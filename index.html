@@ -1,0 +1,276 @@
+<html>
+    <head>
+        <title>GRE - qwkli</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+        <style>
+            body {
+                display: flex;
+                flex-direction: column;
+                font-family: 'Roboto', sans-serif;
+                color: #252724;
+                font-size: 16px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #card {
+                display: flex;
+                flex-direction: column;
+                height: 300px;
+                width: 500px;
+                background-color: #dbead5;
+                border-radius: 10px;
+                padding: 10px;
+            }
+
+            #text {
+                display: flex;
+                flex-direction: column;
+                height: 100px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #word {
+                font-size: 30px;
+            }
+
+
+
+            #translate {
+                display: flex;
+                flex-direction: row;
+                height: 50px;
+                width: 450px;
+                margin-left: 25px;
+                margin-right: 25px;
+                align-items: center;
+                justify-content: center;
+                font-size: 0px;
+            }
+
+            #controls {
+                display: flex;
+                flex-direction: row;
+                height: 120px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #toggle, #next, #back {
+                display: flex;
+                flex-direction: row;
+                height: 30px;
+                width: 100px;
+                margin:15px;
+                color: #ffffff;
+                border-radius: 5px;
+                align-items: center;
+                justify-content: center;
+                background-color: #93bf85;
+                -webkit-touch-callout: none; /* iOS Safari */
+                -webkit-user-select: none; /* Safari */
+                -khtml-user-select: none; /* Konqueror HTML */
+                -moz-user-select: none; /* Old versions of Firefox */
+                -ms-user-select: none; /* Internet Explorer/Edge */
+                user-select: none; /* Non-prefixed version, currently */
+                cursor: pointer;
+  
+            }
+
+            #index-num {
+                display: flex;
+                flex-direction: row;
+                height: 30px;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #unit-box, #word-box {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                width: 500px;
+                background-color: #dbead5;
+                border-radius: 4px;
+                margin: 10px;
+                padding: 10px;
+            }
+
+            #unit-list, #word-list {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
+            }
+
+            #unit-title, #word-title {
+                margin: 10px;
+                font-size: 20px;
+            }
+
+            .list-unit, .list-word {
+                display: flex;
+                flex-direction: row;
+                min-width: 60px;
+                margin: 4px;
+                padding: 4px 8px 4px 8px;
+                align-items: center;
+                justify-content: center;
+                background-color: #93bf85;
+                color:#ffffff;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <div id="card">
+            <div id="text">
+                <div id="word"></div>
+                <div id="phonetics"></div>
+            </div>
+            
+            <div id="translate" onclick="showTranslate();"></div>
+            
+            <div id="controls">
+                <div id="back" onclick="lastWord();">Back</div>
+                <div id="toggle" onclick="toggleTranslate();">Hide: On</div>
+                <div id="next" onclick="nextWord();">Next</div>
+            </div>
+
+            <div>
+                <div id="index-num">1</div>
+            </div>
+        </div>
+
+        <div id="unit-box">
+            <div  id="unit-title">Unit</div>
+            <div id="unit-list">
+
+            </div>
+        </div>
+
+        <div id="word-box">
+            <div id="word-title">Words</div>
+            <div id="word-list">
+                
+            </div>
+        </div>
+
+        <script>
+            var order;
+            var index = 0;
+            var hide = true;
+            var translate_size = 20;
+
+            var word = document.getElementById('word');
+            var phonetics = document.getElementById('phonetics');
+            var translate = document.getElementById('translate');
+            var back = document.getElementById('back');
+            var toggle = document.getElementById('toggle');
+            var next = document.getElementById('next');
+            var index_num = document.getElementById('index-num');
+            var word_list = document.getElementById('word-list');
+            var unit_list = document.getElementById('unit-list');
+
+            fetch('order')
+            .then((response) => response.json())
+            .then((data) => {
+                order = data;
+                getWord(0);
+            });
+
+            var getWord = (word_index)=>{
+                fetch('word?id='+parseInt(order[word_index]))
+                .then((response) => response.json())
+                .then((data) => {
+                    word.textContent = data['Word'];
+                    phonetics.textContent = data['US Phonetics'];
+                    translate.textContent = data['Paraphrase (w/ POS)'];
+                    index_num.textContent = (word_index+1).toString();
+                    index = word_index
+                    if(hide) {
+                        translate.style.fontSize = 0;
+                    } else {
+                        translate.style.fontSize = translate_size;
+                    }
+                });
+            }
+
+            var nextWord = ()=>{
+                getWord(index+1);
+            }
+
+            var lastWord = ()=>{
+                if(index > 0) {
+                    getWord(index-1);
+                }
+            }
+
+            var toggleTranslate = ()=>{
+                if(hide) {
+                    toggle.textContent = "Hide: Off";
+                    hide = false;
+                    translate.style.fontSize = translate_size;
+                } else {
+                    toggle.textContent = "Hide: On";
+                    hide = true;
+                    translate.style.fontSize = 0;
+                }
+            }
+
+            var showTranslate = ()=>{
+                translate.style.fontSize = translate_size;
+            }
+
+            document.addEventListener("keydown", (event)=>{
+                const keyCode = event.which;
+                if(keyCode==37) {lastWord();}
+                if(keyCode==39) {nextWord();}
+                if(keyCode==38) {toggleTranslate();}
+                if(keyCode==40) {showTranslate();}
+            }, false);
+            
+            var getUnitList = ()=>{
+                for(let i=0;i<30;i++) {
+                    var unit = document.createElement("div");
+                    unit.className = "list-unit";
+                    unit.textContent = i+1;
+                    unit.unit = i+1;
+                    unit.onclick = (event)=>{getWordList(event.target.unit);};
+                    unit_list.appendChild(unit);
+                }
+            }
+
+            var getWordList = (unit)=>{
+                fetch('list?unit='+parseInt(unit))
+                .then((response) => response.json())
+                .then((data) => {
+                    while(word_list.firstChild) {
+                        word_list.removeChild(word_list.firstChild);
+                    }
+                    for(let i=0;i<data.length;i++) {
+                        var word = document.createElement("div");
+                        word.className = "list-word";
+                        word.textContent = data[i].word;
+                        word.index = data[i].index;
+                        word.onclick = (event)=>{getWord(event.target.index);};
+                        word_list.appendChild(word);
+                    }
+                });
+            }
+
+            getUnitList();
+            // getWordList(1);
+            
+            
+
+        </script>
+    </body>
+</html>
